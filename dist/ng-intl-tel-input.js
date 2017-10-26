@@ -31,6 +31,8 @@ angular.module('ngIntlTelInput')
         restrict: 'A',
         require: 'ngModel',
         link: function (scope, elm, attr, ctrl) {
+          var isValidationIgnored = attr.ignoreValidation == "true" ? true : false;
+
           // Warning for bad directive usage.
           if ((!!attr.type && (attr.type !== 'text' && attr.type !== 'tel')) || elm[0].tagName !== 'INPUT') {
             $log.warn('ng-intl-tel-input can only be applied to a *text* or *tel* input');
@@ -62,15 +64,20 @@ angular.module('ngIntlTelInput')
             angular.element($window).on('countrychange', handleCountryChange);
             scope.$on('$destroy', cleanUp);
           }
-          // Validation.
-          ctrl.$validators.ngIntlTelInput = function (value) {
-            // if phone number is deleted / empty do not run phone number validation
-            if (value || elm[0].value.length > 0) {
+          
+          // If the flag is false, that is don't ignore the validation, only then validate.
+          if (!isValidationIgnored) {
+            // Validation.
+            ctrl.$validators.ngIntlTelInput = function (value) {
+              // if phone number is deleted / empty do not run phone number validation
+              if (value || elm[0].value.length > 0) {
                 return elm.intlTelInput('isValidNumber');
-            } else {
+              } else {
                 return true;
+              }
             }
-          };
+          }
+
           // Set model value to valid, formatted version.
           ctrl.$parsers.push(function (value) {
             return elm.intlTelInput('getNumber');
